@@ -32,6 +32,8 @@ namespace Snake
         int score;
         //таймер по которому 
         DispatcherTimer moveTimer;
+        //бомба 
+        Bomb bomb;
         
         //конструктор формы, выполняется при запуске программы
         public MainWindow()
@@ -62,7 +64,11 @@ namespace Snake
             //обновляем положение яблока
             Canvas.SetTop(apple.image, apple.y);
             Canvas.SetLeft(apple.image, apple.x);
-            
+
+            //обновляем положение бомбы
+            Canvas.SetTop(bomb.image, bomb.y);
+            Canvas.SetLeft(bomb.image, bomb.x);
+
             //обновляем количество очков
             lblScore.Content = String.Format("{0}000", score);
         }
@@ -110,6 +116,15 @@ namespace Snake
                 canvas1.Children.Add(part.image);
                 snake.Add(part);
             }
+            //проверяем, что голова змеи врезалась в бомбу
+            if (head.x == bomb.x && head.y == bomb.y)
+            {
+                //увеличиваем счет
+                score--;
+                //двигаем яблоко на новое место
+                bomb.move();
+                
+            }
             //перерисовываем экран
             UpdateField();
         }
@@ -151,6 +166,9 @@ namespace Snake
             // создаем новое яблоко и добавлем его
             apple = new Apple(snake);
             canvas1.Children.Add(apple.image);
+            // создаем новую бомбу и добавлем её
+            bomb = new Bomb(snake);
+            canvas1.Children.Add(bomb.image);
             // создаем голову
             head = new Head();
             snake.Add(head);
@@ -257,8 +275,40 @@ namespace Snake
                 } while (true);
 
             }
-        }
 
+        }
+        public class Bomb : PositionedEntity
+        {
+            List<PositionedEntity> mv_snake;
+            public Bomb(List<PositionedEntity> v)
+                : base(0, 0, 40, 40, "pack://application:,,,/Resources/bomb.png")
+            {
+                mv_snake = v;
+                move();
+            }
+            public override void move()
+            {
+                Random rand = new Random();
+                do
+                {
+                    x = rand.Next(10) * 40 + 40;
+                    y = rand.Next(10) * 40 + 40;
+                    bool overlap = false;
+                    foreach (var g in mv_snake)
+                    {
+                        if (g.x == x && g.y == y)
+                        {
+                            overlap = true;
+                            break;
+                        }
+                    }
+                    if (!overlap)
+                        break;
+                } while (true);
+
+            }
+
+        }
         public class Head : PositionedEntity
         {
             public enum Direction
